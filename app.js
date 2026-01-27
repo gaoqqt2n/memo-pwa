@@ -1,0 +1,94 @@
+// ====== データ層 ======
+const STORAGE_KEY = 'memos_v1';
+function loadMemos(){try{const raw=localStorage.getItem(STORAGE_KEY);return raw?JSON.parse(raw):[]}catch(e){console.error('Failed to load memos:',e);return[]}}
+function saveMemos(memos){localStorage.setItem(STORAGE_KEY,JSON.stringify(memos))}
+function uid(){return 'm_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+
+// ====== 状態 ======
+let memos=loadMemos();
+let editingId=null;
+
+// ====== 要素参照 ======
+const memoForm=document.getElementById('memoForm');
+const memoId=document.getElementById('memoId');
+const titleInput=document.getElementById('title');
+const contentInput=document.getElementById('content');
+const colorSelect=document.getElementById('color');
+const fontSizeSelect=document.getElementById('fontSize');
+const charCountSpan=document.getElementById('charCount');
+const saveBtn=document.getElementById('saveBtn');
+const resetBtn=document.getElementById('resetBtn');
+const summaryToggle=document.getElementById('summaryToggle');
+const sortBySelect=document.getElementById('sortBy');
+const memoList=document.getElementById('memoList');
+const emptyNote=document.getElementById('emptyNote');
+const formTitle=document.getElementById('form-title');
+const editorCard=document.getElementById('editorCard');
+
+// ====== ユーティリティ ======
+function formatDate(ts){const d=new Date(ts);const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,'0');const day=String(d.getDate()).padStart(2,'0');const hh=String(d.getHours()).padStart(2,'0');const mm=String(d.getMinutes()).padStart(2,'0');return `${y}/${m}/${day} ${hh}:${mm}`}
+function colorClass(c){const v=['yellow','blue','green','pink','purple','gray'].includes(c)?c:'gray';return v}
+
+// ====== 文字数カウント ======
+function updateCharCount(){charCountSpan.textContent=contentInput.value.length.toString()}
+contentInput.addEventListener('input',updateCharCount);
+
+// ====== 入力中文字サイズ反映 ======
+function applyEditorFontSize(px){contentInput.style.fontSize=`${px}px`}
+fontSizeSelect.addEventListener('change',()=>{const px=parseInt(fontSizeSelect.value,10)||16;applyEditorFontSize(px)});
+
+// ====== 色プレビュー（エディタ） ======
+function applyEditorColorPreview(color){const c=colorClass(color);editorCard.classList.remove('color-yellow','color-blue','color-green','color-pink','color-purple','color-gray');editorCard.classList.add(`color-${c}`)}
+colorSelect.addEventListener('change',()=>applyEditorColorPreview(colorSelect.value));
+
+// ====== フォーム操作 ======
+function resetForm(){editingId=null;memoId.value='';titleInput.value='';contentInput.value='';colorSelect.value='yellow';fontSizeSelect.value='16';applyEditorFontSize(16);applyEditorColorPreview('yellow');updateCharCount();saveBtn.textContent='保存';formTitle.textContent='新規メモ'}
+resetBtn.addEventListener('click',resetForm);
+
+memoForm.addEventListener('submit',(e)=>{e.preventDefault();const title=titleInput.value.trim();const content=contentInput.value;const color=colorSelect.value;const fontSize=parseInt(fontSizeSelect.value,10);if(!title||!content){alert('タイトルと内容は必須です。');return}const now=Date.now();if(editingId){memos=memos.map(m=>m.id===editingId?{...m,title,content,color,fontSize,updatedAt:now}:m)}else{const maxPos=memos.length?Math.max(...memos.map(m=>m.position??0)):0;memos.push({id:uid(),title,content,color,fontSize,createdAt:now,updatedAt:now,position:maxPos+1})}saveMemos(memos);resetForm();renderList()});
+
+// ====== 一覧表示 ======
+function renderList(){const sortBy=sortBySelect.value;const summary=summaryToggle.checked;let list=[...memos];switch(sortBy){case 'updatedAt':list.sort((a,b)=>b.updatedAt-a.updatedAt);break;case 'createdAt':list.sort((a,b)=>b.createdAt-a.createdAt);break;case 'title':list.sort((a,b)=>a.title.localeCompare(b.title,'ja'));break;case 'color':list.sort((a,b)=>a.color.localeCompare(b.color,'ja'));break;case 'manual':default:list.sort((a,b)=>(a.position??0)-(b.position??0));break}
+  memoList.innerHTML='';if(list.length===0){emptyNote.classList.remove('hidden');return}else{emptyNote.classList.add('hidden')}
+  const manual=sortBy==='manual';
+  list.forEach(m=>{const li=document.createElement('li');li.className=`memo-item ${colorClass(m.color)}`;li.dataset.id=m.id;li.title='長押ししてドラッグで並び替え';
+    if(manual){li.draggable=true;li.addEventListener('dragstart',onDragStart);li.addEventListener('dragover',onDragOver);li.addEventListener('dragleave',onDragLeave);li.addEventListener('drop',onDrop);li.addEventListener('dragend',onDragEnd)}
+    const handle=document.createElement('div');handle.className='handle';handle.textContent='⋮⋮';
+    const main=document.createElement('div');main.className='memo-main';
+    const title=document.createElement('h3');title.className='memo-title';title.textContent=m.title;
+    const colorBadge=document.createElement('span');colorBadge.className='color-badge';const colorName={yellow:'黄色',blue:'青',green:'緑',pink:'ピンク',purple:'紫',gray:'グレー'}[colorClass(m.color)]||'グレー';colorBadge.textContent=`色: ${colorName}`;
+    const content=document.createElement('p');content.className='memo-content';content.textContent=m.content;content.style.fontSize=`${m.fontSize||16}px`;
+    const meta=document.createElement('div');meta.className='meta';meta.innerHTML=`<span class="badge">作成: ${formatDate(m.createdAt)}</span><span class="badge">更新: ${formatDate(m.updatedAt)}</span><span class="badge">文字数: ${m.content.length}</span><span class="badge">文字サイズ: ${m.fontSize||16}px</span>`;
+
+    main.appendChild(title);main.appendChild(colorBadge);if(!summary){main.appendChild(content);main.appendChild(meta)}
+
+    const controls=document.createElement('div');controls.className='controls';
+    const editBtn=document.createElement('button');editBtn.className='btn';editBtn.textContent='編集';editBtn.addEventListener('click',()=>startEdit(m.id));
+    const delBtn=document.createElement('button');delBtn.className='btn danger';delBtn.textContent='削除';delBtn.addEventListener('click',()=>deleteMemo(m.id));
+    controls.appendChild(editBtn);controls.appendChild(delBtn);
+
+    li.appendChild(handle);li.appendChild(main);li.appendChild(controls);
+    memoList.appendChild(li)
+  })
+}
+
+// ====== 編集/削除 ======
+function startEdit(id){const m=memos.find(x=>x.id===id);if(!m)return;editingId=id;memoId.value=id;titleInput.value=m.title;contentInput.value=m.content;colorSelect.value=m.color;fontSizeSelect.value=String(m.fontSize||16);applyEditorFontSize(parseInt(fontSizeSelect.value,10)||16);applyEditorColorPreview(colorSelect.value);updateCharCount();saveBtn.textContent='更新';formTitle.textContent='メモを編集';window.scrollTo({top:0,behavior:'smooth'})}
+function deleteMemo(id){const m=memos.find(x=>x.id===id);if(!m)return;if(!confirm(`「${m.title}」を削除しますか？`))return;memos=memos.filter(x=>x.id!==id);saveMemos(memos);renderList();if(editingId===id)resetForm()}
+
+document.getElementById('deleteAllBtn').addEventListener('click',()=>{if(memos.length===0)return;if(!confirm('すべてのメモを削除します。よろしいですか？'))return;memos=[];saveMemos(memos);renderList();resetForm()});
+
+// ====== 並び替え（ドラッグ＆ドロップ） ======
+let dragSrcEl=null;
+function onDragStart(e){dragSrcEl=this;this.classList.add('dragging');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',this.dataset.id)}
+function onDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';this.style.borderColor='#93c5fd'}
+function onDragLeave(){this.style.borderColor='var(--border)'}
+function onDrop(e){e.stopPropagation();this.style.borderColor='var(--border)';const srcId=e.dataTransfer.getData('text/plain');const tgtId=this.dataset.id;if(!srcId||srcId===tgtId)return;const listEls=Array.from(memoList.children);const srcEl=listEls.find(li=>li.dataset.id===srcId);const tgtEl=listEls.find(li=>li.dataset.id===tgtId);const rect=this.getBoundingClientRect();const before=(e.clientY-rect.top)<rect.height/2;if(before){memoList.insertBefore(srcEl,tgtEl)}else{memoList.insertBefore(srcEl,tgtEl.nextSibling)}const orderedIds=Array.from(memoList.children).map(li=>li.dataset.id);memos.forEach(m=>m.position=orderedIds.indexOf(m.id)+1);saveMemos(memos)}
+function onDragEnd(){this.classList.remove('dragging')}
+
+sortBySelect.addEventListener('change',renderList);
+summaryToggle.addEventListener('change',renderList);
+
+// ====== 初期化 ======
+resetForm();
+renderList();

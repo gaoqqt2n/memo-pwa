@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#2563eb" />
+  <title>メモ帳 v2</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png" sizes="192x192">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css" />
+  <style>body{padding-bottom:env(safe-area-inset-bottom)}</style>
+</head>
+<body>
+  <header class="app-header">
+    <h1>メモ帳 v2</h1>
+    <button id="installBtn" class="btn primary install-btn" hidden>ホーム画面に追加</button>
+  </header>
+
+  <main class="container">
+    <section class="card legend" aria-labelledby="legend-title">
+      <h2 id="legend-title">色の凡例</h2>
+      <div class="legend-items">
+        <span class="legend-chip color-yellow">黄色</span>
+        <span class="legend-chip color-blue">青</span>
+        <span class="legend-chip color-green">緑</span>
+        <span class="legend-chip color-pink">ピンク</span>
+        <span class="legend-chip color-purple">紫</span>
+        <span class="legend-chip color-gray">グレー</span>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="form-title" id="editorCard">
+      <h2 id="form-title">新規メモ</h2>
+      <form id="memoForm">
+        <input type="hidden" id="memoId" />
+
+        <div class="form-row">
+          <label for="title">タイトル</label>
+          <input id="title" name="title" type="text" maxlength="200" placeholder="タイトルを入力" required inputmode="text" />
+        </div>
+
+        <div class="form-row">
+          <label for="content">内容</label>
+          <textarea id="content" name="content" rows="8" placeholder="内容を入力" required></textarea>
+          <div class="char-count" aria-live="polite">
+            文字数: <span id="charCount">0</span>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="color">色</label>
+            <select id="color" name="color">
+              <option value="yellow">黄色</option>
+              <option value="blue">青</option>
+              <option value="green">緑</option>
+              <option value="pink">ピンク</option>
+              <option value="purple">紫</option>
+              <option value="gray">グレー</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label for="fontSize">文字サイズ</label>
+            <select id="fontSize" name="fontSize">
+              <option value="14">小（14px）</option>
+              <option value="16" selected>中（16px）</option>
+              <option value="18">やや大（18px）</option>
+              <option value="20">大（20px）</option>
+              <option value="24">特大（24px）</option>
+            </select>
+            <small class="hint">※ 選択中のサイズでテキストエリアも即時に拡大縮小します</small>
+          </div>
+        </div>
+
+        <div class="actions mobile-sticky">
+          <button type="submit" class="btn primary" id="saveBtn">保存</button>
+          <button type="button" class="btn" id="resetBtn">リセット</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="view-title">
+      <h2 id="view-title">表示設定</h2>
+      <div class="form-grid">
+        <label class="checkbox">
+          <input type="checkbox" id="summaryToggle" />
+          サマリ表示（タイトルのみ）
+        </label>
+
+        <div class="form-row">
+          <label for="sortBy">並び替え</label>
+          <select id="sortBy" name="sortBy">
+            <option value="manual">手動（ドラッグ＆ドロップ）</option>
+            <option value="updatedAt">更新日（新しい順）</option>
+            <option value="createdAt">作成日（新しい順）</option>
+            <option value="title">タイトル（A→Z）</option>
+            <option value="color">色（A→Z）</option>
+          </select>
+        </div>
+      </div>
+      <p class="hint">※ 手動を選ぶと、カードをドラッグして並び替えできます（スマホは長押し→ドラッグ）。</p>
+    </section>
+
+    <section class="card" aria-labelledby="list-title">
+      <div class="list-header">
+        <h2 id="list-title">メモ一覧</h2>
+        <button class="btn danger" id="deleteAllBtn" title="すべて削除">すべて削除</button>
+      </div>
+      <ul id="memoList" class="memo-list" aria-live="polite"></ul>
+      <p id="emptyNote" class="empty">まだメモがありません。上のフォームから作成してください。</p>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <small>ローカル保存（このブラウザ内のみ）</small>
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js');
+      });
+    }
+
+    let deferredPrompt; const installBtn = document.getElementById('installBtn');
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; installBtn.hidden = false;});
+    installBtn?.addEventListener('click', async () => { installBtn.hidden = true; if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; }});
+  </script>
+</body>
+</html>
