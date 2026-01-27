@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#2563eb" />
-  <title>メモ帳 v2</title>
+  <title>Mymo</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon-192.png" sizes="192x192">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -13,23 +13,13 @@
 </head>
 <body>
   <header class="app-header">
-    <h1>メモ帳 v2</h1>
+    <button id="openPanelBtn" class="icon-btn" aria-label="一覧・表示設定を開く" aria-controls="sidePanel" aria-expanded="false">☰</button>
+    <h1 class="app-title">Mymo</h1>
     <button id="installBtn" class="btn primary install-btn" hidden>ホーム画面に追加</button>
   </header>
 
   <main class="container">
-    <section class="card legend" aria-labelledby="legend-title">
-      <h2 id="legend-title">色の凡例</h2>
-      <div class="legend-items">
-        <span class="legend-chip color-yellow">黄色</span>
-        <span class="legend-chip color-blue">青</span>
-        <span class="legend-chip color-green">緑</span>
-        <span class="legend-chip color-pink">ピンク</span>
-        <span class="legend-chip color-purple">紫</span>
-        <span class="legend-chip color-gray">グレー</span>
-      </div>
-    </section>
-
+    <!-- 作成/編集フォーム（エディタ） -->
     <section class="card" aria-labelledby="form-title" id="editorCard">
       <h2 id="form-title">新規メモ</h2>
       <form id="memoForm">
@@ -41,8 +31,21 @@
         </div>
 
         <div class="form-row">
-          <label for="content">内容</label>
-          <textarea id="content" name="content" rows="8" placeholder="内容を入力" required></textarea>
+          <div class="editor-toolbar">
+            <div class="toolbar-group">
+              <span class="toolbar-label">エディタ：</span>
+              <button type="button" class="btn sm" data-editor-height="small" title="小">小</button>
+              <button type="button" class="btn sm" data-editor-height="medium" title="中">中</button>
+              <button type="button" class="btn sm" data-editor-height="large" title="大">大</button>
+            </div>
+            <div class="toolbar-group">
+              <button type="button" class="btn" id="fullscreenBtn" title="全画面">全画面</button>
+            </div>
+          </div>
+          <label class="sr-only" for="content">内容</label>
+          <div id="editorContainer" class="editor-container">
+            <textarea id="content" name="content" rows="10" placeholder="内容を入力" required></textarea>
+          </div>
           <div class="char-count" aria-live="polite">
             文字数: <span id="charCount">0</span>
           </div>
@@ -80,15 +83,23 @@
         </div>
       </form>
     </section>
+  </main>
 
-    <section class="card" aria-labelledby="view-title">
-      <h2 id="view-title">表示設定</h2>
+  <!-- 右スワイプで表示されるサイドパネル（表示設定 + メモ一覧） -->
+  <aside id="sidePanel" class="side-panel" aria-hidden="true" aria-labelledby="panelTitle">
+    <div class="side-header">
+      <h2 id="panelTitle">一覧・表示設定</h2>
+      <button id="closePanelBtn" class="icon-btn" aria-label="閉じる">✕</button>
+    </div>
+
+    <!-- 表示設定 -->
+    <section class="panel-section" aria-labelledby="view-title">
+      <h3 id="view-title">表示設定</h3>
       <div class="form-grid">
         <label class="checkbox">
           <input type="checkbox" id="summaryToggle" />
           サマリ表示（タイトルのみ）
         </label>
-
         <div class="form-row">
           <label for="sortBy">並び替え</label>
           <select id="sortBy" name="sortBy">
@@ -100,18 +111,20 @@
           </select>
         </div>
       </div>
-      <p class="hint">※ 手動を選ぶと、カードをドラッグして並び替えできます（スマホは長押し→ドラッグ）。</p>
+      <p class="hint">※ パネルを開いたまま、カードをドラッグで並び替えできます。</p>
     </section>
 
-    <section class="card" aria-labelledby="list-title">
+    <!-- メモ一覧 -->
+    <section class="panel-section" aria-labelledby="list-title">
       <div class="list-header">
-        <h2 id="list-title">メモ一覧</h2>
+        <h3 id="list-title">メモ一覧</h3>
         <button class="btn danger" id="deleteAllBtn" title="すべて削除">すべて削除</button>
       </div>
       <ul id="memoList" class="memo-list" aria-live="polite"></ul>
       <p id="emptyNote" class="empty">まだメモがありません。上のフォームから作成してください。</p>
     </section>
-  </main>
+  </aside>
+  <div id="backdrop" class="backdrop" hidden></div>
 
   <footer class="app-footer">
     <small>ローカル保存（このブラウザ内のみ）</small>
@@ -119,12 +132,10 @@
 
   <script src="app.js"></script>
   <script>
+    // PWA 登録と A2HS
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./service-worker.js');
-      });
+      window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js'));
     }
-
     let deferredPrompt; const installBtn = document.getElementById('installBtn');
     window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; installBtn.hidden = false;});
     installBtn?.addEventListener('click', async () => { installBtn.hidden = true; if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; }});

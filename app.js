@@ -24,6 +24,13 @@ const memoList=document.getElementById('memoList');
 const emptyNote=document.getElementById('emptyNote');
 const formTitle=document.getElementById('form-title');
 const editorCard=document.getElementById('editorCard');
+const editorContainer=document.getElementById('editorContainer');
+
+// Side panel
+const sidePanel=document.getElementById('sidePanel');
+const openPanelBtn=document.getElementById('openPanelBtn');
+const closePanelBtn=document.getElementById('closePanelBtn');
+const backdrop=document.getElementById('backdrop');
 
 // ====== ユーティリティ ======
 function formatDate(ts){const d=new Date(ts);const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,'0');const day=String(d.getDate()).padStart(2,'0');const hh=String(d.getHours()).padStart(2,'0');const mm=String(d.getMinutes()).padStart(2,'0');return `${y}/${m}/${day} ${hh}:${mm}`}
@@ -40,6 +47,36 @@ fontSizeSelect.addEventListener('change',()=>{const px=parseInt(fontSizeSelect.v
 // ====== 色プレビュー（エディタ） ======
 function applyEditorColorPreview(color){const c=colorClass(color);editorCard.classList.remove('color-yellow','color-blue','color-green','color-pink','color-purple','color-gray');editorCard.classList.add(`color-${c}`)}
 colorSelect.addEventListener('change',()=>applyEditorColorPreview(colorSelect.value));
+
+// ====== エディタ高さボタン ======
+document.querySelectorAll('[data-editor-height]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const mode=btn.getAttribute('data-editor-height');
+    switch(mode){
+      case 'small': contentInput.style.height='25vh'; break;
+      case 'medium': contentInput.style.height='40vh'; break;
+      case 'large': contentInput.style.height='70vh'; break;
+    }
+  });
+});
+
+// ====== フルスクリーン ======
+const fullscreenBtn=document.getElementById('fullscreenBtn');
+function isFullscreen(){return document.fullscreenElement!=null}
+async function enterFS(){
+  if(editorContainer.requestFullscreen){await editorContainer.requestFullscreen();}
+}
+async function exitFS(){
+  if(document.exitFullscreen){await document.exitFullscreen();}
+}
+fullscreenBtn.addEventListener('click',async()=>{
+  try{
+    if(!isFullscreen()) await enterFS(); else await exitFS();
+  }catch(e){
+    // フォールバック：CSS擬似FS
+    editorContainer.classList.toggle('pseudo-fs');
+  }
+});
 
 // ====== フォーム操作 ======
 function resetForm(){editingId=null;memoId.value='';titleInput.value='';contentInput.value='';colorSelect.value='yellow';fontSizeSelect.value='16';applyEditorFontSize(16);applyEditorColorPreview('yellow');updateCharCount();saveBtn.textContent='保存';formTitle.textContent='新規メモ'}
@@ -89,6 +126,44 @@ function onDragEnd(){this.classList.remove('dragging')}
 sortBySelect.addEventListener('change',renderList);
 summaryToggle.addEventListener('change',renderList);
 
+// ====== サイドパネル開閉 & スワイプ ======
+function openPanel(){sidePanel.classList.add('open');openPanelBtn.setAttribute('aria-expanded','true');backdrop.hidden=false;sidePanel.setAttribute('aria-hidden','false')}
+function closePanel(){sidePanel.classList.remove('open');openPanelBtn.setAttribute('aria-expanded','false');backdrop.hidden=true;sidePanel.setAttribute('aria-hidden','true')}
+openPanelBtn.addEventListener('click',openPanel);
+closePanelBtn.addEventListener('click',closePanel);
+backdrop.addEventListener('click',closePanel);
+
+let touchStartX=null,touchStartY=null,trackingEdge=false;
+window.addEventListener('touchstart',(e)=>{
+  const t=e.touches[0];
+  touchStartX=t.clientX; touchStartY=t.clientY;
+  // 右端 24px 以内のタッチ開始を検出して開くジェスチャを許可
+  trackingEdge = (!sidePanel.classList.contains('open') && (window.innerWidth - touchStartX) < 24);
+},{passive:true});
+
+window.addEventListener('touchmove',(e)=>{
+  if(touchStartX==null) return;
+  const t=e.touches[0];
+  const dx=t.clientX - touchStartX; const dy=Math.abs(t.clientY - touchStartY);
+  if(trackingEdge && Math.abs(dx) > 40 && dy < 40){ // 水平スワイプ
+    if(dx < -40){ // 右端から左へスワイプで開く
+      openPanel();
+      touchStartX = null; trackingEdge=false;
+    }
+  }
+},{passive:true});
+
+// パネル開時は右方向へのスワイプで閉じる
+sidePanel.addEventListener('touchstart',(e)=>{
+  const t=e.touches[0]; touchStartX=t.clientX; touchStartY=t.clientY;
+},{passive:true});
+sidePanel.addEventListener('touchmove',(e)=>{
+  if(touchStartX==null) return;
+  const t=e.touches[0]; const dx=t.clientX - touchStartX; const dy=Math.abs(t.clientY - touchStartY);
+  if(Math.abs(dx) > 40 && dy < 40){ if(dx > 40){ closePanel(); touchStartX=null; }}
+},{passive:true});
+
 // ====== 初期化 ======
-resetForm();
-renderList();
+function initEditorHeights(){contentInput.style.height='40vh'}
+function init(){resetForm();renderList();initEditorHeights();}
+init();
