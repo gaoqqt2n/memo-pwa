@@ -13,9 +13,21 @@
 </head>
 <body>
   <header class="app-header">
-    <button id="openPanelBtn" class="icon-btn" aria-label="一覧・表示設定を開く" aria-controls="sidePanel" aria-expanded="false">☰</button>
+
+    <button class="icon-btn">☰</button>
     <h1 class="app-title">Mymo</h1>
-    <button id="installBtn" class="btn primary install-btn" hidden>ホーム画面に追加</button>
+  
+    <!-- ←←← ここが “右側” にあたる場所！！ -->
+    <div id="authArea" style="display:flex; gap:8px; align-items:center; margin-left:auto;">
+      <input id="loginEmail" 
+             type="email"
+             placeholder="メールアドレス"
+             style="padding:6px; width:160px;" />
+      <button id="sendLinkBtn" class="btn sm">ログインリンクを送信</button>
+      <button id="logoutBtn" class="btn sm" style="display:none;">ログアウト</button>
+      <span id="whoami" class="hint"></span>
+    </div>
+  
   </header>
 
   <main class="container">
@@ -140,5 +152,16 @@
     window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; installBtn.hidden = false;});
     installBtn?.addEventListener('click', async () => { installBtn.hidden = true; if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; }});
   </script>
+  <!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- Supabase init（あなたの URL / anon key を直書き） -->
+<script src="./scripts/supabase-init.js"></script>
+
+<!-- 認証 UI と状態反映 -->
+<script src="./scripts/auth.js"></script>
+
+<!-- Supabase 用の CRUD + Realtime -->
+<script src="./scripts/storage-supabase.js"></script>
 </body>
 </html>
