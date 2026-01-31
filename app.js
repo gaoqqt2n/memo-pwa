@@ -20,8 +20,7 @@ async function fetchAndRenderFromCloud(){
     if(error){ console.error(error); return; }
     memos = (data || []).map(row => ({
       id: row.id,
-      title: row.title || (row.content ? (row.content.split('
-')[0].slice(0,30) || '無題') : '無題'),
+      title: row.title || (row.content ? (row.content.split('')[0].slice(0,30) || '無題') : '無題'),
       content: row.content || '',
       color: row.color || 'gray',
       fontSize: row.font_size || 16,
