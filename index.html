@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -12,101 +13,98 @@
   <style>body{padding-bottom:env(safe-area-inset-bottom)}</style>
 </head>
 <body>
-  <header class="app-header">
-    <button id="openPanelBtn" class="icon-btn" aria-label="メニュー">☰</button>
-    <h1 class="app-title">Mymo</h1>
+  <div id="mainWrapper">
+    <header class="app-header">
+      <button id="openPanelBtn" class="icon-btn" aria-label="メニュー">☰</button>
+      <h1 class="app-title">Mymo</h1>
+      <div id="authArea" style="display:flex; gap:8px; align-items:center; margin-left:auto;">
+        <input id="loginEmail" type="email" placeholder="メールアドレス" style="padding:6px; width:160px;" />
+        <button id="sendLinkBtn" class="btn sm">ログインリンクを送信</button>
+        <button id="logoutBtn" class="btn sm" style="display:none;">ログアウト</button>
+        <span id="whoami" class="hint"></span>
+      </div>
+    </header>
 
-    <!-- ログイン UI（右側） -->
-    <div id="authArea" style="display:flex; gap:8px; align-items:center; margin-left:auto;">
-      <input id="loginEmail" type="email" placeholder="メールアドレス" style="padding:6px; width:160px;" />
-      <button id="sendLinkBtn" class="btn sm">ログインリンクを送信</button>
-      <button id="logoutBtn" class="btn sm" style="display:none;">ログアウト</button>
-      <span id="whoami" class="hint"></span>
-    </div>
-  </header>
+    <main class="container">
+      <section class="card" aria-labelledby="form-title" id="editorCard">
+        <h2 id="form-title">新規メモ</h2>
+        <form id="memoForm">
+          <input type="hidden" id="memoId" />
 
-  <main class="container">
-    <!-- 作成/編集フォーム（エディタ） -->
-    <section class="card" aria-labelledby="form-title" id="editorCard">
-      <h2 id="form-title">新規メモ</h2>
-      <form id="memoForm">
-        <input type="hidden" id="memoId" />
-
-        <div class="form-row">
-          <label for="title">タイトル</label>
-          <input id="title" name="title" type="text" maxlength="200" placeholder="タイトルを入力" required inputmode="text" />
-        </div>
-
-        <div class="form-row">
-          <div class="editor-toolbar">
-            <div class="toolbar-group">
-              <span class="toolbar-label">エディタ：</span>
-              <button type="button" class="btn sm" data-editor-height="small" title="小">小</button>
-              <button type="button" class="btn sm" data-editor-height="medium" title="中">中</button>
-              <button type="button" class="btn sm" data-editor-height="large" title="大">大</button>
-            </div>
-            <div class="toolbar-group">
-              <button type="button" class="btn" id="fullscreenBtn" title="全画面">全画面</button>
-            </div>
-          </div>
-
-          <label class="sr-only" for="content">内容</label>
-          <div id="editorContainer" class="editor-container">
-            <textarea id="content" name="content" rows="10" placeholder="内容を入力" required></textarea>
-          </div>
-          <div class="char-count" aria-live="polite">
-            文字数: <span id="charCount">0</span>
-          </div>
-        </div>
-
-        <div class="form-grid">
           <div class="form-row">
-            <label for="color">色</label>
-            <select id="color" name="color">
-              <option value="yellow">黄色</option>
-              <option value="blue">青</option>
-              <option value="green">緑</option>
-              <option value="pink">ピンク</option>
-              <option value="purple">紫</option>
-              <option value="gray">グレー</option>
-            </select>
+            <label for="title">タイトル</label>
+            <input id="title" name="title" type="text" maxlength="200" placeholder="タイトルを入力" required inputmode="text" />
           </div>
+
           <div class="form-row">
-            <label for="fontSize">文字サイズ</label>
-            <select id="fontSize" name="fontSize">
-              <option value="14">小（14px）</option>
-              <option value="16" selected>中（16px）</option>
-              <option value="18">やや大（18px）</option>
-              <option value="20">大（20px）</option>
-              <option value="24">特大（24px）</option>
-            </select>
-            <small class="hint">※ 選択中のサイズでテキストエリアも即時に拡大縮小します</small>
+            <div class="editor-toolbar">
+              <div class="toolbar-group">
+                <span class="toolbar-label">エディタ：</span>
+                <button type="button" class="btn sm" data-editor-height="small" title="小">小</button>
+                <button type="button" class="btn sm" data-editor-height="medium" title="中">中</button>
+                <button type="button" class="btn sm" data-editor-height="large" title="大">大</button>
+              </div>
+              <div class="toolbar-group">
+                <button type="button" class="btn" id="fullscreenBtn" title="全画面">全画面</button>
+              </div>
+            </div>
+
+            <label class="sr-only" for="content">内容</label>
+            <div id="editorContainer" class="editor-container">
+              <textarea id="content" name="content" rows="10" placeholder="内容を入力" required></textarea>
+            </div>
+            <div class="char-count" aria-live="polite">文字数: <span id="charCount">0</span></div>
           </div>
-        </div>
 
-        <div class="actions mobile-sticky">
-          <button type="submit" class="btn primary" id="saveBtn">保存</button>
-          <button type="button" class="btn" id="resetBtn">リセット</button>
-        </div>
-      </form>
-    </section>
-  </main>
+          <div class="form-grid">
+            <div class="form-row">
+              <label for="color">色</label>
+              <select id="color" name="color">
+                <option value="yellow">黄色</option>
+                <option value="blue">青</option>
+                <option value="green">緑</option>
+                <option value="pink">ピンク</option>
+                <option value="purple">紫</option>
+                <option value="gray">グレー</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label for="fontSize">文字サイズ</label>
+              <select id="fontSize" name="fontSize">
+                <option value="14">小（14px）</option>
+                <option value="16" selected>中（16px）</option>
+                <option value="18">やや大（18px）</option>
+                <option value="20">大（20px）</option>
+                <option value="24">特大（24px）</option>
+              </select>
+              <small class="hint">※ 選択中のサイズでテキストエリアも即時に拡大縮小します</small>
+            </div>
+          </div>
 
-  <!-- 右スワイプで表示されるサイドパネル（表示設定 + メモ一覧） -->
+          <div class="actions mobile-sticky">
+            <button type="submit" class="btn primary" id="saveBtn">保存</button>
+            <button type="button" class="btn" id="resetBtn">リセット</button>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <small>ローカル保存（このブラウザ内のみ）</small>
+    </footer>
+  </div>
+
+  <!-- full-screen side panel -->
   <aside id="sidePanel" class="side-panel" aria-hidden="true" aria-labelledby="panelTitle">
     <div class="side-header">
       <h2 id="panelTitle">一覧・表示設定</h2>
       <button id="closePanelBtn" class="icon-btn" aria-label="閉じる">✕</button>
     </div>
 
-    <!-- 表示設定 -->
     <section class="panel-section" aria-labelledby="view-title">
       <h3 id="view-title">表示設定</h3>
       <div class="form-grid">
-        <label class="checkbox">
-          <input type="checkbox" id="summaryToggle" />
-          サマリ表示（タイトルのみ）
-        </label>
+        <label class="checkbox"><input type="checkbox" id="summaryToggle" /> サマリ表示（タイトルのみ）</label>
         <div class="form-row">
           <label for="sortBy">並び替え</label>
           <select id="sortBy" name="sortBy">
@@ -121,7 +119,6 @@
       <p class="hint">※ パネルを開いたまま、カードをドラッグで並び替えできます。</p>
     </section>
 
-    <!-- メモ一覧 -->
     <section class="panel-section" aria-labelledby="list-title">
       <div class="list-header">
         <h3 id="list-title">メモ一覧</h3>
@@ -134,28 +131,23 @@
 
   <div id="backdrop" class="backdrop" hidden></div>
 
-  <footer class="app-footer">
-    <small>ローカル保存（このブラウザ内のみ）</small>
-  </footer>
-
-  <!-- 既存アプリ本体 -->
   <script src="app.js"></script>
 
-  <!-- PWA 登録と A2HS（installBtn が無い環境でも落ちないようにガード） -->
   <script>
+    // PWA
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js'));
+      window.addEventListener('load', function(){ navigator.serviceWorker.register('./service-worker.js'); });
     }
-    let deferredPrompt; const installBtn = document.getElementById('installBtn');
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault(); deferredPrompt = e; if (installBtn) installBtn.hidden = false;
-    });
-    installBtn?.addEventListener('click', async () => {
-      installBtn.hidden = true; if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; }
-    });
+    var deferredPrompt; var installBtn = document.getElementById('installBtn');
+    window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferredPrompt = e; if (installBtn) installBtn.hidden = false; });
+    if (installBtn) {
+      installBtn.addEventListener('click', function(){
+        installBtn.hidden = true; if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then(function(){ deferredPrompt = null; }); }
+      });
+    }
   </script>
 
-  <!-- Supabase SDK と連携スクリプト（順序厳守） -->
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./scripts/supabase-init.js"></script>
   <script src="./scripts/auth.js"></script>
