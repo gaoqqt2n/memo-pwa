@@ -13,21 +13,16 @@
 </head>
 <body>
   <header class="app-header">
-
-    <button class="icon-btn">☰</button>
+    <button id="openPanelBtn" class="icon-btn" aria-label="メニュー">☰</button>
     <h1 class="app-title">Mymo</h1>
-  
-    <!-- ←←← ここが “右側” にあたる場所！！ -->
+
+    <!-- ログイン UI（右側） -->
     <div id="authArea" style="display:flex; gap:8px; align-items:center; margin-left:auto;">
-      <input id="loginEmail" 
-             type="email"
-             placeholder="メールアドレス"
-             style="padding:6px; width:160px;" />
+      <input id="loginEmail" type="email" placeholder="メールアドレス" style="padding:6px; width:160px;" />
       <button id="sendLinkBtn" class="btn sm">ログインリンクを送信</button>
       <button id="logoutBtn" class="btn sm" style="display:none;">ログアウト</button>
       <span id="whoami" class="hint"></span>
     </div>
-  
   </header>
 
   <main class="container">
@@ -54,6 +49,7 @@
               <button type="button" class="btn" id="fullscreenBtn" title="全画面">全画面</button>
             </div>
           </div>
+
           <label class="sr-only" for="content">内容</label>
           <div id="editorContainer" class="editor-container">
             <textarea id="content" name="content" rows="10" placeholder="内容を入力" required></textarea>
@@ -75,7 +71,6 @@
               <option value="gray">グレー</option>
             </select>
           </div>
-
           <div class="form-row">
             <label for="fontSize">文字サイズ</label>
             <select id="fontSize" name="fontSize">
@@ -136,32 +131,34 @@
       <p id="emptyNote" class="empty">まだメモがありません。上のフォームから作成してください。</p>
     </section>
   </aside>
+
   <div id="backdrop" class="backdrop" hidden></div>
 
   <footer class="app-footer">
     <small>ローカル保存（このブラウザ内のみ）</small>
   </footer>
 
+  <!-- 既存アプリ本体 -->
   <script src="app.js"></script>
+
+  <!-- PWA 登録と A2HS（installBtn が無い環境でも落ちないようにガード） -->
   <script>
-    // PWA 登録と A2HS
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js'));
     }
     let deferredPrompt; const installBtn = document.getElementById('installBtn');
-    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; installBtn.hidden = false;});
-    installBtn?.addEventListener('click', async () => { installBtn.hidden = true; if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; }});
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault(); deferredPrompt = e; if (installBtn) installBtn.hidden = false;
+    });
+    installBtn?.addEventListener('click', async () => {
+      installBtn.hidden = true; if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; }
+    });
   </script>
-  <!-- Supabase SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<!-- Supabase init（あなたの URL / anon key を直書き） -->
-<script src="./scripts/supabase-init.js"></script>
-
-<!-- 認証 UI と状態反映 -->
-<script src="./scripts/auth.js"></script>
-
-<!-- Supabase 用の CRUD + Realtime -->
-<script src="./scripts/storage-supabase.js"></script>
+  <!-- Supabase SDK と連携スクリプト（順序厳守） -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./scripts/supabase-init.js"></script>
+  <script src="./scripts/auth.js"></script>
+  <script src="./scripts/storage-supabase.js"></script>
 </body>
 </html>

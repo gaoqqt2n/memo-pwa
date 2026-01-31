@@ -1,8 +1,5 @@
-
-// scripts/auth.js
 (function(){
   if (!window.sb) return;
-
   const $ = (sel) => document.querySelector(sel);
   const emailInput = $('#loginEmail');
   const sendLinkBtn = $('#sendLinkBtn');
@@ -36,13 +33,7 @@
     if (error) alert(error.message); else alert('ログインリンクを送信しました。メールを確認してください。');
   });
 
-  logoutBtn && logoutBtn.addEventListener('click', async () => {
-    await sb.auth.signOut();
-  });
+  logoutBtn && logoutBtn.addEventListener('click', async () => { await sb.auth.signOut(); });
 
-  sb.auth.onAuthStateChange((_evt, session) => {
-    setAuthUI(session);
-    // ページ側のフックがあれば呼ぶ
-    if (window.onSupabaseAuthState) window.onSupabaseAuthState(session);
-  });
+  sb.auth.onAuthStateChange((_evt, session) => { setAuthUI(session); if (window.onSupabaseAuthState) window.onSupabaseAuthState(session); });
 })();
